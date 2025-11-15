@@ -18,11 +18,9 @@ This UI is intended for demo purposes as part of a larger system where: Charger 
 
 ### Battery Health Visualization
 
-Live SoH reading for the latest charging session
-
-Change vs previous session
-
-Temperature, SoC, and energy added summary
+- Live SoH reading for the latest charging session
+- Change vs previous session
+- Temperature, SoC, and energy added summary
 
 ### Trend Chart
 
