@@ -19,7 +19,6 @@ html,
 }
 
 /* MAIN SCREEN LAYOUT */
-
 .screen {
     width: 100%;
     height: 100%;
@@ -30,7 +29,6 @@ html,
     padding: 4px 16px 8px;
     gap: 8px;
 
-    /* whole screen scrolls */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -40,7 +38,6 @@ html,
     align-items: center;
     justify-content: space-between;
     margin-top: 2px;
-    /* small tweak */
 }
 
 .top-bar-left {
@@ -89,19 +86,16 @@ html,
     color: #ff453a;
 }
 
-/* CONTENT AREA – just layout, NO own scrolling now */
-
+/* CONTENT AREA */
 .content {
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr);
     gap: 10px;
 
-    /* small extra space above nav */
     padding-bottom: 12px;
 }
 
 /* PANELS */
-
 .panel {
     background: rgba(9, 11, 22, 0.9);
     border-radius: 16px;
@@ -133,7 +127,6 @@ html,
 }
 
 /* CURRENT SOH SECTION */
-
 .current-soh-row {
     display: flex;
     justify-content: space-between;
@@ -215,7 +208,6 @@ html,
 }
 
 /* Chart */
-
 .panel-chart {
     display: flex;
     flex-direction: column;
@@ -262,7 +254,6 @@ html,
     min-height: 0;
 }
 
-/* IMPORTANT: remove its own scrolling, let whole screen handle it */
 .session-list {
     margin-top: 6px;
     display: flex;
@@ -307,7 +298,6 @@ html,
 }
 
 /* STATUS BAR */
-
 .status-bar {
     display: flex;
     align-items: center;
@@ -354,41 +344,7 @@ html,
     opacity: 0.9;
 }
 
-/* QUICK STRIP */
-
-.quick-strip {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 2px;
-}
-
-.quick-btn {
-    flex: 1;
-    border: none;
-    border-radius: 999px;
-    padding: 4px 8px;
-    background: rgba(21, 24, 40, 0.9);
-    color: #e7e9f5;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-}
-
-.quick-btn-active {
-    background: linear-gradient(120deg, #2bcbff, #5e72eb);
-}
-
-.quick-icon {
-    font-size: 1rem;
-}
-
-.quick-label {
-    white-space: nowrap;
-}
-
 /* BOTTOM NAV – fixed overlay inside the car screen */
-
 .bottom-nav {
     position: sticky;
     bottom: 0;
@@ -459,4 +415,127 @@ html,
 #root {
     width: 100%;
     height: 100%;
+}
+
+/* VW-style HOME MENU GRID – fills the screen under the header */
+
+.home-menu-content {
+    flex: 1;
+    min-height: 0;
+
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+
+    padding: 20px 0;
+}
+
+.home-menu-grid {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+
+    display: grid;
+
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+
+    gap: 20px;
+
+    margin: 0;
+    padding: 0;
+}
+
+.home-menu-tile {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: radial-gradient(circle at top, #272b37, #141722 60%, #05060a);
+    box-shadow:
+        0 6px 10px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+    color: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    cursor: default;
+}
+
+.home-menu-icon {
+    font-size: 1.6rem;
+}
+
+.home-menu-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Battery tile – interactive, glow on hover */
+.home-menu-tile-battery {
+    cursor: pointer;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease,
+        filter 0.25s ease;
+}
+
+.home-menu-tile-battery:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow:
+        0 0 25px rgba(80, 220, 255, 0.8),
+        0 8px 18px rgba(0, 0, 0, 0.8);
+    background: radial-gradient(circle at top, #2f3f6a, #111423 65%, #05060a);
+    filter: drop-shadow(0 0 12px rgba(80, 220, 255, 0.7));
+}
+
+.home-menu-tile-battery:active {
+    transform: translateY(-1px) scale(0.99);
+    box-shadow:
+        0 0 14px rgba(80, 220, 255, 0.7),
+        0 4px 10px rgba(0, 0, 0, 0.8);
+    filter: drop-shadow(0 0 8px rgba(80, 220, 255, 0.6));
+}
+
+/* Screen enter animation */
+.screen-battery-enter {
+    animation: battery-screen-in 300ms ease-out;
+    transform-origin: bottom center;
+}
+
+@keyframes battery-screen-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+        filter: blur(2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+.screen-home-enter {
+    animation: home-screen-in 200ms ease-out;
+    transform-origin: bottom center;
+}
+
+@keyframes home-screen-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+        filter: blur(2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
 }

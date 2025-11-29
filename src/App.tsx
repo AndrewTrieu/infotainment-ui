@@ -3,15 +3,13 @@ import type { ChargingSession } from "./types";
 import { fetchSessions } from "./api";
 
 type LoadState = "idle" | "loading" | "success" | "error";
+type Screen = "home" | "battery";
 
 const App: React.FC = () => {
+  const [screen, setScreen] = useState<Screen>("home");
   const [sessions, setSessions] = useState<ChargingSession[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const [activeTab] = useState<"home" | "battery" | "trips" | "settings">(
-    "battery"
-  );
 
   useEffect(() => {
     const load = async () => {
@@ -21,7 +19,8 @@ const App: React.FC = () => {
       try {
         const { sessions } = await fetchSessions(30);
         const sorted = [...sessions].sort(
-          (a, b) => new Date(b.endedAt).getTime() - new Date(a.endedAt).getTime()
+          (a, b) =>
+            new Date(b.endedAt).getTime() - new Date(a.endedAt).getTime()
         );
         setSessions(sorted);
         setLoadState("success");
@@ -43,6 +42,159 @@ const App: React.FC = () => {
     return latestSession.sohEnd - previousSession.sohEnd;
   }, [latestSession, previousSession]);
 
+  const now = new Date();
+
+  return (
+    <div
+      className={`screen ${
+        screen === "battery" ? "screen-battery-enter" : "screen-home-enter"
+      }`}
+    >
+      <StatusBar now={now} />
+      {screen === "home" ? (
+        <HomeScreen onOpenBattery={() => setScreen("battery")} />
+      ) : (
+        <BatteryScreen
+          sessions={sessions}
+          loadState={loadState}
+          errorMessage={errorMessage}
+          latestSession={latestSession}
+          sohChange={sohChange}
+        />
+      )}
+      {screen === "battery" && (
+        <BottomNav current={screen} onChange={setScreen} />
+      )}
+    </div>
+  );
+};
+
+/* ---------- STATUS BAR ---------- */
+
+interface StatusBarProps {
+  now: Date;
+}
+
+const StatusBar: React.FC<StatusBarProps> = ({ now }) => (
+  <div className="status-bar">
+    <div className="status-left">
+      <span className="status-time">
+        {now.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </span>
+      <span className="status-temp">-2°C</span>
+    </div>
+    <div className="status-center">
+      <span className="status-car">
+        🚗
+        <span className="status-car-range">320 km</span>
+      </span>
+    </div>
+    <div className="status-right">
+      <span className="status-icon">📶</span>
+      <span className="status-icon">LTE</span>
+      <span className="status-icon">🔊</span>
+    </div>
+  </div>
+);
+
+/* ---------- HOME SCREEN ---------- */
+
+interface HomeScreenProps {
+  onOpenBattery: () => void;
+}
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ onOpenBattery }) => {
+  return (
+    <>
+      <header className="top-bar">
+        <div className="top-bar-left">
+          <span className="brand">Car Menu</span>
+          <span className="subtitle">Select a function</span>
+        </div>
+      </header>
+
+      {/* HOME CONTENT: VW-style icon grid */}
+      <main className="home-menu-content">
+        <div className="home-menu-grid">
+          {/* Row 1 */}
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">📻</span>
+            <span className="home-menu-label">Radio</span>
+          </button>
+
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">🎵</span>
+            <span className="home-menu-label">Media</span>
+          </button>
+
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">🔗</span>
+            <span className="home-menu-label">App Connect</span>
+          </button>
+
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">❄️</span>
+            <span className="home-menu-label">Climate</span>
+          </button>
+
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">📞</span>
+            <span className="home-menu-label">Devices</span>
+          </button>
+
+          <button
+            className="home-menu-tile home-menu-tile-battery"
+            onClick={onOpenBattery}
+          >
+            <span className="home-menu-icon">🔋</span>
+            <span className="home-menu-label">Battery</span>
+          </button>
+
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">🚗</span>
+            <span className="home-menu-label">Car</span>
+          </button>
+
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">🖼️</span>
+            <span className="home-menu-label">Images</span>
+          </button>
+
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">🔊</span>
+            <span className="home-menu-label">Sound</span>
+          </button>
+
+          <button className="home-menu-tile">
+            <span className="home-menu-icon">⚙️</span>
+            <span className="home-menu-label">Settings</span>
+          </button>
+        </div>
+      </main>
+    </>
+  );
+};
+
+/* ---------- BATTERY SCREEN (existing screen) ---------- */
+
+interface BatteryScreenProps {
+  sessions: ChargingSession[];
+  loadState: LoadState;
+  errorMessage: string | null;
+  latestSession: ChargingSession | null;
+  sohChange: number | null;
+}
+
+const BatteryScreen: React.FC<BatteryScreenProps> = ({
+  sessions,
+  loadState,
+  errorMessage,
+  latestSession,
+  sohChange,
+}) => {
   const sohTrendPoints = useMemo(() => {
     return sessions
       .slice()
@@ -56,73 +208,15 @@ const App: React.FC = () => {
       }));
   }, [sessions]);
 
-  const now = new Date();
-
   return (
-    <div className="screen">
-      {/* STATUS BAR – topmost, like Android Auto / CarPlay */}
-      <div className="status-bar">
-        <div className="status-left">
-          <span className="status-time">
-            {now.toLocaleTimeString(undefined, {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-          <span className="status-temp">-2°C</span>
-        </div>
-        <div className="status-center">
-          <span className="status-car">
-            🚗
-            <span className="status-car-range">320 km</span>
-          </span>
-        </div>
-        <div className="status-right">
-          <span className="status-icon">📶</span>
-          <span className="status-icon">LTE</span>
-          <span className="status-icon">🔊</span>
-        </div>
-      </div>
-
-      {/* APP HEADER */}
+    <>
       <header className="top-bar">
         <div className="top-bar-left">
           <span className="brand">Battery Health</span>
           <span className="subtitle">Last 30 days</span>
         </div>
-        <div className="top-bar-right">
-          <span className="status-dot" />
-          <span className="status-label">
-            {loadState === "loading"
-              ? "Syncing…"
-              : loadState === "error"
-              ? "Offline"
-              : "Connected"}
-          </span>
-        </div>
       </header>
 
-      {/* QUICK CONTROL STRIP – static toggles to feel “car-like” */}
-      <div className="quick-strip">
-        <button className="quick-btn quick-btn-active">
-          <span className="quick-icon">❄️</span>
-          <span className="quick-label">AC Auto</span>
-        </button>
-        <button className="quick-btn">
-          <span className="quick-icon">🔥</span>
-          <span className="quick-label">Seat</span>
-        </button>
-        <button className="quick-btn">
-          <span className="quick-icon">🌙</span>
-          <span className="quick-label">Night</span>
-        </button>
-        <button className="quick-btn">
-          <span className="quick-icon">⚡</span>
-          <span className="quick-label">Eco</span>
-        </button>
-      </div>
-
-      {/* MAIN CONTENT */}
       {loadState === "loading" && (
         <div className="center-message">Loading charging history…</div>
       )}
@@ -156,14 +250,16 @@ const App: React.FC = () => {
                 <span className="value">
                   {latestSession ? latestSession.sohEnd.toFixed(1) : "--"}%
                 </span>
-                <span className="secondary">
-                  Session ended{" "}
-                  {new Date(latestSession!.endedAt).toLocaleString(undefined, {
-                    weekday: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
+                {latestSession && (
+                  <span className="secondary">
+                    Session ended{" "}
+                    {new Date(latestSession.endedAt).toLocaleString(undefined, {
+                      weekday: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                )}
               </div>
 
               <div className="soh-change">
@@ -254,9 +350,7 @@ const App: React.FC = () => {
               {sessions.map((session, index) => {
                 const prev = sessions[index + 1];
                 const delta =
-                  prev != null
-                    ? session.sohEnd - prev.sohEnd
-                    : undefined;
+                  prev != null ? session.sohEnd - prev.sohEnd : undefined;
 
                 return (
                   <SessionRow
@@ -270,46 +364,51 @@ const App: React.FC = () => {
           </section>
         </main>
       )}
-
-      {/* BOTTOM NAV – static icons / labels */}
-      <nav className="bottom-nav">
-        <button
-          className={
-            "nav-button " + (activeTab === "home" ? "nav-button-active" : "")
-          }
-        >
-          <span className="nav-icon">🏠</span>
-          <span className="nav-label">Home</span>
-        </button>
-        <button
-          className={
-            "nav-button " + (activeTab === "battery" ? "nav-button-active" : "")
-          }
-        >
-          <span className="nav-icon">🔋</span>
-          <span className="nav-label">Battery</span>
-        </button>
-        <button
-          className={
-            "nav-button " + (activeTab === "trips" ? "nav-button-active" : "")
-          }
-        >
-          <span className="nav-icon">🗺️</span>
-          <span className="nav-label">Trips</span>
-        </button>
-        <button
-          className={
-            "nav-button " +
-            (activeTab === "settings" ? "nav-button-active" : "")
-          }
-        >
-          <span className="nav-icon">⚙️</span>
-          <span className="nav-label">Settings</span>
-        </button>
-      </nav>
-    </div>
+    </>
   );
 };
+
+/* ---------- BOTTOM NAV ---------- */
+
+interface BottomNavProps {
+  current: Screen;
+  onChange: (screen: Screen) => void;
+}
+
+const BottomNav: React.FC<BottomNavProps> = ({ current, onChange }) => {
+  return (
+    <nav className="bottom-nav">
+      <button
+        className={
+          "nav-button " + (current === "home" ? "nav-button-active" : "")
+        }
+        onClick={() => onChange("home")}
+      >
+        <span className="nav-icon">🏠</span>
+        <span className="nav-label">Home</span>
+      </button>
+      <button
+        className={
+          "nav-button " + (current === "battery" ? "nav-button-active" : "")
+        }
+        onClick={() => onChange("battery")}
+      >
+        <span className="nav-icon">🚗</span>
+        <span className="nav-label">Car</span>
+      </button>
+      <button className="nav-button">
+        <span className="nav-icon">🗺️</span>
+        <span className="nav-label">Navigation</span>
+      </button>
+      <button className="nav-button">
+        <span className="nav-icon">⚙️</span>
+        <span className="nav-label">Settings</span>
+      </button>
+    </nav>
+  );
+};
+
+/* ---------- CHART + SESSION ROW (unchanged) ---------- */
 
 interface TrendPoint {
   label: string;
@@ -332,10 +431,7 @@ const SimpleTrendChart: React.FC<SimpleTrendChartProps> = ({ points }) => {
 
   const norm = (v: number) => {
     if (max === min) return 50;
-    return (
-      padding +
-      ((max - v) / (max - min)) * (100 - padding * 2)
-    );
+    return padding + ((max - v) / (max - min)) * (100 - padding * 2);
   };
 
   const stepX = points.length > 1 ? 100 / (points.length - 1) : 50;
@@ -350,7 +446,11 @@ const SimpleTrendChart: React.FC<SimpleTrendChartProps> = ({ points }) => {
 
   return (
     <div className="chart-wrapper">
-      <svg viewBox="0 0 100 100" className="chart-svg" preserveAspectRatio="none">
+      <svg
+        viewBox="0 0 100 100"
+        className="chart-svg"
+        preserveAspectRatio="none"
+      >
         <path d={pathD} className="chart-line" fill="none" />
         {points.map((p, i) => {
           const x = i * stepX;
