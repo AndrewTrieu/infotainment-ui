@@ -2,7 +2,7 @@
 
 This project is a mock EV infotainment system built with React + TypeScript + Vite, designed to simulate how an in-car display could show battery State of Health (SoH) and charging session history.
 
-![alt text](src/assets/image.png)
+![Demo](https://raw.githubusercontent.com/AndrewTrieu/infotainment-ui/main/src/assets/video.mp4)
 
 It includes:
 
