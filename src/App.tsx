@@ -62,9 +62,7 @@ const App: React.FC = () => {
           sohChange={sohChange}
         />
       )}
-      {screen === "battery" && (
-        <BottomNav current={screen} onChange={setScreen} />
-      )}
+      {screen === "battery" && <BottomNav onChange={setScreen} />}
     </div>
   );
 };
@@ -371,28 +369,17 @@ const BatteryScreen: React.FC<BatteryScreenProps> = ({
 /* ---------- BOTTOM NAV ---------- */
 
 interface BottomNavProps {
-  current: Screen;
   onChange: (screen: Screen) => void;
 }
 
-const BottomNav: React.FC<BottomNavProps> = ({ current, onChange }) => {
+const BottomNav: React.FC<BottomNavProps> = ({ onChange }) => {
   return (
     <nav className="bottom-nav">
-      <button
-        className={
-          "nav-button " + (current === "home" ? "nav-button-active" : "")
-        }
-        onClick={() => onChange("home")}
-      >
+      <button className="nav-button" onClick={() => onChange("home")}>
         <span className="nav-icon">🏠</span>
         <span className="nav-label">Home</span>
       </button>
-      <button
-        className={
-          "nav-button " + (current === "battery" ? "nav-button-active" : "")
-        }
-        onClick={() => onChange("battery")}
-      >
+      <button className="nav-button">
         <span className="nav-icon">🚗</span>
         <span className="nav-label">Car</span>
       </button>
